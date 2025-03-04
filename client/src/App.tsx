@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth";
-import type { User } from '@firebase/auth-types';
+import type { User } from 'firebase/auth';
 import { initializeApp } from "firebase/app";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import Dashboard from "./Dashboard";
@@ -15,13 +15,14 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-function App(): JSX.Element {
+function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -31,7 +32,7 @@ function App(): JSX.Element {
     return () => unsubscribe();
   }, []);
 
-  const loginWithGoogle = async (): Promise<void> => {
+  const loginWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       setUser(result.user);
@@ -41,25 +42,53 @@ function App(): JSX.Element {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
   }
 
   return (
     <Router>
-      <div className="app">
+      <div className="min-h-screen bg-gray-50">
         {!user ? (
           <div className="login-container">
-            <h1>Welcome to Letter App</h1>
-            <button onClick={loginWithGoogle} className="login-button">
+            <h1 className="text-4xl font-bold mb-8">Welcome to Letter App</h1>
+            <button
+              onClick={loginWithGoogle}
+              className="login-button flex items-center gap-2"
+            >
+              <img
+                src="https://www.google.com/favicon.ico"
+                alt="Google"
+                className="w-5 h-5"
+              />
               Sign in with Google
             </button>
           </div>
         ) : (
-          <Routes>
-            <Route path="/dashboard" element={<Dashboard user={user} />} />
-            <Route path="/editor" element={<LetterEditor user={user} />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <nav className="mb-8">
+              <ul className="flex gap-4">
+                <li>
+                  <a href="/dashboard" className="text-blue-600 hover:text-blue-800">
+                    Dashboard
+                  </a>
+                </li>
+                <li>
+                  <a href="/editor" className="text-blue-600 hover:text-blue-800">
+                    Letter Editor
+                  </a>
+                </li>
+              </ul>
+            </nav>
+            <Routes>
+              <Route path="/dashboard" element={<Dashboard user={user} />} />
+              <Route path="/editor" element={<LetterEditor user={user} />} />
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </div>
         )}
       </div>
     </Router>
